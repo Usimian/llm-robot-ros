@@ -7,6 +7,7 @@ import os
 import pathlib
 import time
 import subprocess
+import math
 from typing import Tuple
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Bool
@@ -19,6 +20,29 @@ node = None
 vel_publisher = None
 explore_publisher = None
 navigate_to_pose_action_client = None
+
+
+def quaternion_to_euler(x: float, y: float, z: float, w: float) -> tuple:
+    """Convert quaternion to Euler angles (roll, pitch, yaw) in degrees."""
+
+    # Roll (x-axis rotation)
+    sinr_cosp = 2 * (w * x + y * z)
+    cosr_cosp = 1 - 2 * (x * x + y * y)
+    roll = math.atan2(sinr_cosp, cosr_cosp)
+
+    # Pitch (y-axis rotation)
+    sinp = 2 * (w * y - z * x)
+    if abs(sinp) >= 1:
+        pitch = math.copysign(math.pi / 2, sinp)
+    else:
+        pitch = math.asin(sinp)
+
+    # Yaw (z-axis rotation)
+    siny_cosp = 2 * (w * z + x * y)
+    cosy_cosp = 1 - 2 * (y * y + z * z)
+    yaw = math.atan2(siny_cosp, cosy_cosp)
+
+    return math.degrees(roll), math.degrees(pitch), math.degrees(yaw)
 
 
 def execute_ros_command(command: str) -> Tuple[bool, str]:
@@ -171,7 +195,8 @@ def navigate_to_pose(
     goal_msg.pose.pose.orientation.w = w_orientation
 
     navigate_to_pose_action_client.send_goal_async(goal_msg)
-    return f"Navigation goal sent to x: {x}, y: {y}, orientation_z: {z_orientation}, orientation_w: {w_orientation}."
+    roll, pitch, yaw = quaternion_to_euler(0, 0, z_orientation, w_orientation)
+    return f"Navigation goal sent to (x={x:.2f}, y={y:.2f}, yaw={yaw:.1f}°)."
 
 
 @tool
@@ -203,7 +228,8 @@ def navigate_relative(
     goal_msg.pose.pose.orientation.w = w_orientation
 
     navigate_to_pose_action_client.send_goal_async(goal_msg)
-    return f"Relative navigation goal sent to x: {x}, y: {y}, orientation_z: {z_orientation}, orientation_w: {w_orientation}."
+    roll, pitch, yaw = quaternion_to_euler(0, 0, z_orientation, w_orientation)
+    return f"Relative navigation goal sent to (x={x:.2f}, y={y:.2f}, yaw={yaw:.1f}°)."
 
 
 @tool
@@ -291,7 +317,10 @@ def navigate_to_location_by_name(location_name: str) -> str:
     goal_msg.pose.pose.orientation.w = orient["w"]
 
     navigate_to_pose_action_client.send_goal_async(goal_msg)
-    return f"Navigation goal sent to location '{location_name}'. Position: {pos}, Orientation: {orient}."
+
+    # Convert orientation to yaw for display
+    roll, pitch, yaw = quaternion_to_euler(0, 0, orient["z"], orient["w"])
+    return f"Navigation goal sent to '{location_name}' (x={pos['x']:.2f}, y={pos['y']:.2f}, yaw={yaw:.1f}°)."
 
 
 def main():
@@ -316,10 +345,10 @@ def main():
         if user_name == "ros":
             print("Using remote Ollama instance")
             llm = ChatOllama(
-                model="hhao/qwen2.5-coder-tools:latest",  # "gemma3:12b",  # or your preferred model
+                model="qwen3-vl:8b",  # Vision + tool calling model
                 temperature=0,
-                num_ctx=32192,  # adjust based on your model's context window
-                base_url="http://160.85.252.236:11434",
+                num_ctx=4096,  # Reduced for faster inference
+                base_url="http://host.docker.internal:11434",
             )
         else:
             print("Using Anthropic API with Claude Sonnet 3.5")
@@ -361,6 +390,7 @@ def main():
             navigate_to_location_by_name,
         ],
         prompts=prompt,
+        verbose=True,
     )
 
     print("Type 'exit' or 'quit' to end the program")
@@ -373,7 +403,12 @@ def main():
 
             try:
                 print("Request sent")
+                print("DEBUG: Calling agent.invoke...")
+                import time
+                start_time = time.time()
                 res = agent.invoke(msg)[0]
+                end_time = time.time()
+                print(f"DEBUG: agent.invoke took {end_time - start_time:.2f} seconds")
                 if isinstance(res, dict) and "text" in res:
                     print(res["text"])
                 else:
