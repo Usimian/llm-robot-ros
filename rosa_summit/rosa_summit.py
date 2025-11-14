@@ -134,12 +134,15 @@ def send_vel(velocity: float) -> str:
 
     :param velocity: the velocity at which the robot should move
     """
+    print(f"[TOOL CALL] send_vel(velocity={velocity})")
     global vel_publisher
     twist = Twist()
     twist.linear.x = velocity
     vel_publisher.publish(twist)
 
-    return "Velocity set to %s" % velocity
+    result = "Velocity set to %s" % velocity
+    print(f"[TOOL RESULT] {result}")
+    return result
 
 
 @tool
@@ -148,10 +151,13 @@ def stop() -> str:
     Stops or halts the robot by setting its velocity to zero
 
     """
+    print(f"[TOOL CALL] stop()")
     global vel_publisher
     twist = Twist()
     vel_publisher.publish(twist)
-    return "Robot stopped"
+    result = "Robot stopped"
+    print(f"[TOOL RESULT] {result}")
+    return result
 
 
 @tool
@@ -161,15 +167,18 @@ def toggle_auto_exploration(resume_exploration: bool) -> str:
 
     :param resume_exploration: True to start/resume exploration, False to stop/pause exploration.
     """
+    print(f"[TOOL CALL] toggle_auto_exploration(resume_exploration={resume_exploration})")
     global explore_publisher
     msg = Bool()
     msg.data = resume_exploration
     explore_publisher.publish(msg)
 
     if resume_exploration:
-        return "Autonomous exploration started/resumed."
+        result = "Autonomous exploration started/resumed."
     else:
-        return "Autonomous exploration stopped/paused."
+        result = "Autonomous exploration stopped/paused."
+    print(f"[TOOL RESULT] {result}")
+    return result
 
 
 @tool
@@ -184,6 +193,7 @@ def navigate_to_pose(
     :param z_orientation: The z component of the target orientation (quaternion).
     :param w_orientation: The w component of the target orientation (quaternion).
     """
+    print(f"[TOOL CALL] navigate_to_pose(x={x}, y={y}, z_orientation={z_orientation}, w_orientation={w_orientation})")
     global navigate_to_pose_action_client, node
 
     goal_msg = NavigateToPose.Goal()
@@ -196,7 +206,9 @@ def navigate_to_pose(
 
     navigate_to_pose_action_client.send_goal_async(goal_msg)
     roll, pitch, yaw = quaternion_to_euler(0, 0, z_orientation, w_orientation)
-    return f"Navigation goal sent to (x={x:.2f}, y={y:.2f}, yaw={yaw:.1f}°)."
+    result = f"Navigation goal sent to (x={x:.2f}, y={y:.2f}, yaw={yaw:.1f}°)."
+    print(f"[TOOL RESULT] {result}")
+    return result
 
 
 @tool
@@ -217,6 +229,7 @@ def navigate_relative(
     :param z_orientation: The z component of the target orientation (quaternion) relative to the robot.
     :param w_orientation: The w component of the target orientation (quaternion) relative to the robot.
     """
+    print(f"[TOOL CALL] navigate_relative(x={x}, y={y}, z_orientation={z_orientation}, w_orientation={w_orientation})")
     global navigate_to_pose_action_client, node
 
     goal_msg = NavigateToPose.Goal()
@@ -229,7 +242,9 @@ def navigate_relative(
 
     navigate_to_pose_action_client.send_goal_async(goal_msg)
     roll, pitch, yaw = quaternion_to_euler(0, 0, z_orientation, w_orientation)
-    return f"Relative navigation goal sent to (x={x:.2f}, y={y:.2f}, yaw={yaw:.1f}°)."
+    result = f"Relative navigation goal sent to (x={x:.2f}, y={y:.2f}, yaw={yaw:.1f}°)."
+    print(f"[TOOL RESULT] {result}")
+    return result
 
 
 @tool
@@ -299,10 +314,13 @@ def navigate_to_location_by_name(location_name: str) -> str:
 
     :param location_name: The name of the location to navigate to (e.g., 'kitchen', 'gym').
     """
+    print(f"[TOOL CALL] navigate_to_location_by_name(location_name='{location_name}')")
     global navigate_to_pose_action_client, node
     location_name_lower = location_name.lower()
     if location_name_lower not in LOCATIONS:
-        return f"Location '{location_name}' not found. Available locations are: {', '.join(LOCATIONS.keys())}"
+        result = f"Location '{location_name}' not found. Available locations are: {', '.join(LOCATIONS.keys())}"
+        print(f"[TOOL RESULT] {result}")
+        return result
 
     loc_data = LOCATIONS[location_name_lower]
     pos = loc_data["position"]
@@ -320,7 +338,9 @@ def navigate_to_location_by_name(location_name: str) -> str:
 
     # Convert orientation to yaw for display
     roll, pitch, yaw = quaternion_to_euler(0, 0, orient["z"], orient["w"])
-    return f"Navigation goal sent to '{location_name}' (x={pos['x']:.2f}, y={pos['y']:.2f}, yaw={yaw:.1f}°)."
+    result = f"Navigation goal sent to '{location_name}' (x={pos['x']:.2f}, y={pos['y']:.2f}, yaw={yaw:.1f}°)."
+    print(f"[TOOL RESULT] {result}")
+    return result
 
 
 def main():
@@ -345,9 +365,9 @@ def main():
         if user_name == "ros":
             print("Using remote Ollama instance")
             llm = ChatOllama(
-                model="qwen3-vl:8b",  # Vision + tool calling model
+                model="qwen2.5:7b",  # Fast text-only model for better performance
                 temperature=0,
-                num_ctx=4096,  # Reduced for faster inference
+                num_ctx=2048,  # Reduced context for faster inference
                 base_url="http://host.docker.internal:11434",
             )
         else:
@@ -397,38 +417,57 @@ def main():
 
     try:
         while True:
-            msg = input("Enter your request: ")
+            request_start_time = time.time()
+            msg = input("\n" + "="*60 + "\nEnter your request: ")
             if msg.lower() in ["exit", "quit"]:
                 break
 
             try:
-                print("Request sent")
-                print("DEBUG: Calling agent.invoke...")
-                import time
-                start_time = time.time()
+                print("="*60)
+                print(f"[USER INPUT] {msg}")
+                print("[LLM] Processing request...")
+                print("="*60)
+
+                llm_start_time = time.time()
                 response = agent.invoke(msg)
-                end_time = time.time()
-                print(f"DEBUG: agent.invoke took {end_time - start_time:.2f} seconds")
-                print(f"DEBUG: Response type: {type(response)}, length: {len(response) if hasattr(response, '__len__') else 'N/A'}")
+                llm_end_time = time.time()
+
+                print("="*60)
+                print(f"[LLM] Response received in {llm_end_time - llm_start_time:.2f} seconds")
+                print(f"[DEBUG] Response type: {type(response)}")
 
                 # Handle different response formats
                 if isinstance(response, list) and len(response) > 0:
                     res = response[0]
+                    print(f"[DEBUG] Extracted first element from list response")
                 elif isinstance(response, dict):
                     res = response
+                    print(f"[DEBUG] Response is a dictionary with keys: {list(res.keys())}")
                 else:
                     res = response
+                    print(f"[DEBUG] Using raw response")
 
+                print("="*60)
+                print("[AGENT RESPONSE]")
                 if isinstance(res, dict) and "text" in res:
                     print(res["text"])
                 else:
                     print(res)
+                print("="*60)
+
+                request_end_time = time.time()
+                print(f"[TOTAL] Complete request cycle took {request_end_time - request_start_time:.2f} seconds")
+                print("="*60)
             except Exception as e:
                 import traceback
-                print(f"An error occurred: {e}")
-                print(f"DEBUG: Full traceback:\n{traceback.format_exc()}")
+                print("="*60)
+                print(f"[ERROR] An error occurred: {e}")
+                print(f"[ERROR] Full traceback:\n{traceback.format_exc()}")
+                print("="*60)
     except KeyboardInterrupt:
-        print("\nProgram terminated by user")
+        print("\n" + "="*60)
+        print("Program terminated by user")
+        print("="*60)
 
     agent.shutdown()
     print("Bye from rosa_summit.")

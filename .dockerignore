@@ -1,0 +1,12 @@
+.git
+.gitignore
+.claude
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.pdf
+*.gv
+demo/
+README.md
