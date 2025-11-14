@@ -406,15 +406,27 @@ def main():
                 print("DEBUG: Calling agent.invoke...")
                 import time
                 start_time = time.time()
-                res = agent.invoke(msg)[0]
+                response = agent.invoke(msg)
                 end_time = time.time()
                 print(f"DEBUG: agent.invoke took {end_time - start_time:.2f} seconds")
+                print(f"DEBUG: Response type: {type(response)}, length: {len(response) if hasattr(response, '__len__') else 'N/A'}")
+
+                # Handle different response formats
+                if isinstance(response, list) and len(response) > 0:
+                    res = response[0]
+                elif isinstance(response, dict):
+                    res = response
+                else:
+                    res = response
+
                 if isinstance(res, dict) and "text" in res:
                     print(res["text"])
                 else:
                     print(res)
             except Exception as e:
+                import traceback
                 print(f"An error occurred: {e}")
+                print(f"DEBUG: Full traceback:\n{traceback.format_exc()}")
     except KeyboardInterrupt:
         print("\nProgram terminated by user")
 
