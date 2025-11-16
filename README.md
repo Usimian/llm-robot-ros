@@ -1,9 +1,36 @@
 # ROSA Summit
 
 This package provides a ROS2 interface for controlling a simulated Summit XL robot using a Large Language Model (LLM) through the ROSA framework.
-It is intended to be used inside a Container running a specific ROS 2 image. (robopaas/rap-jazzy:cuda12.5.0)
+It can be run either inside a Container or using the provided Docker setup.
 
 ## Setup
+
+### Option 1: Docker (Recommended)
+
+1.  **Clone the repository:**
+    ```bash
+    git clone <repository_url>
+    cd llm-robot-ros
+    ```
+
+2.  **Add your API key:**
+    Create an `api-key.txt` file in the repository root with your Anthropic API key.
+
+3.  **Build the Docker image:**
+    ```bash
+    docker build -t llm-robot-ros:latest .
+    ```
+
+4.  **Run the container:**
+    ```bash
+    ./start.sh
+    ```
+    This launches the simulation with SLAM enabled. To run the LLM agent in the container:
+    ```bash
+    ./start_LLM.sh
+    ```
+
+### Option 2: Manual Setup Inside Container
 
 1.  **Clone the repository:**
     Clone this repository into the `~/rap/Gruppe2` directory inside your `rap-jazzy` container.
@@ -30,6 +57,12 @@ All required ROS 2 packages and Python libraries are automatically installed whe
   - Installs or upgrades necessary Python libraries for ROSA and the LLM interaction, including `jpl-rosa`, `langchain-ollama`, `langchain-core`, `pydantic`, `anthropic`, and `langchain-anthropic`.
 - **Gazebo Models:**
   - Sets the `GZ_SIM_RESOURCE_PATH` environment variable to include the custom Gazebo models used in the simulation world.
+- **LLM Backend (Ollama):**
+  - The Docker setup uses Ollama running on the host machine (accessible via `host.docker.internal:11434`)
+  - Currently configured to use **qwen2.5:7b** with full GPU acceleration
+  - Requires `ollama pull qwen2.5:7b` on the host machine
+  - GPU optimization settings configured via `/etc/systemd/system/ollama.service.d/override.conf`
+  - All 37 model layers are offloaded to GPU for optimal performance
 
 The `init.sh` script also builds the Colcon workspace and runs `rosdep install` to ensure all system dependencies for the ROS 2 packages are met.
 

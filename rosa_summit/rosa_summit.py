@@ -365,9 +365,11 @@ def main():
         if user_name == "ros":
             print("Using remote Ollama instance")
             llm = ChatOllama(
-                model="qwen2.5:7b",  # Fast text-only model for better performance
+                model="qwen2.5:7b",  # Fast text-only model with good tool support
                 temperature=0,
                 num_ctx=2048,  # Reduced context for faster inference
+                num_gpu=99,  # Use all available GPU layers
+                num_thread=4,  # Limit CPU threads to reduce CPU load
                 base_url="http://host.docker.internal:11434",
             )
         else:
@@ -392,10 +394,14 @@ def main():
         return
 
     prompt = RobotSystemPrompts()
-    prompt.embodiment = "You are an helpful robot named Summit, designed to assist users in a simulated environment. You can navigate, explore, and interact with the environment using various tools."
+    prompt.embodiment = """You are a helpful robot named Summit, designed to assist users in a simulated environment.
+You can navigate, explore, and interact with the environment using various tools.
+
+IMPORTANT: When a tool returns a success message (e.g., "goal sent", "velocity set", "map saved"),
+the task is COMPLETE. Do NOT call the same tool again. Simply acknowledge the completion to the user."""
 
     # Pass the LLM to ROSA with both tools available
-    agent = ROSA(
+    rosa_agent = ROSA(
         ros_version=2,
         llm=llm,
         tools=[
@@ -412,6 +418,12 @@ def main():
         prompts=prompt,
         verbose=True,
     )
+
+    # Configure the underlying LangChain agent with max_iterations
+    agent = rosa_agent
+    if hasattr(agent, 'agent_executor'):
+        agent.agent_executor.max_iterations = 3
+        agent.agent_executor.early_stopping_method = "generate"
 
     print("Type 'exit' or 'quit' to end the program")
 
