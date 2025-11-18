@@ -17,7 +17,9 @@ RUN sed -i 's/update_frequency: 5.0/update_frequency: 10.0/g' /home/ros/colcon_w
     sed -i 's/publish_frequency: 2.0/publish_frequency: 5.0/g' /home/ros/colcon_ws/src/icclab_summit_xl/icclab_summit_xl/config/nav2_params_sim.yaml && \
     sed -i 's/plugins: \["voxel_layer", "inflation_layer"\]/plugins: ["obstacle_layer", "inflation_layer"]/g' /home/ros/colcon_ws/src/icclab_summit_xl/icclab_summit_xl/config/nav2_params_sim.yaml && \
     sed -i '/voxel_layer:/,/raytrace_min_range: 0.0/c\      obstacle_layer:\n        plugin: "nav2_costmap_2d::ObstacleLayer"\n        enabled: True\n        footprint_clearing_enabled: true\n        max_obstacle_height: 2.0\n        observation_sources: scan\n        scan:\n          topic: "<robot_namespace>/scan"\n          max_obstacle_height: 2.0\n          obstacle_max_range: 3.0\n          obstacle_min_range: 0.0\n          raytrace_max_range: 4.0\n          raytrace_min_range: 0.0\n          clearing: True\n          marking: True\n          data_type: "LaserScan"' /home/ros/colcon_ws/src/icclab_summit_xl/icclab_summit_xl/config/nav2_params_sim.yaml && \
-    sed -i 's/plugins: \["static_layer", "voxel_layer", "inflation_layer"\]/plugins: ["static_layer", "obstacle_layer", "inflation_layer"]/g' /home/ros/colcon_ws/src/icclab_summit_xl/icclab_summit_xl/config/nav2_params_sim.yaml
+    sed -i 's/plugins: \["static_layer", "voxel_layer", "inflation_layer"\]/plugins: ["static_layer", "obstacle_layer", "inflation_layer"]/g' /home/ros/colcon_ws/src/icclab_summit_xl/icclab_summit_xl/config/nav2_params_sim.yaml && \
+    sed -i 's/xy_goal_tolerance: 0.25/xy_goal_tolerance: 0.10/g' /home/ros/colcon_ws/src/icclab_summit_xl/icclab_summit_xl/config/nav2_params_sim.yaml && \
+    sed -i 's/yaw_goal_tolerance: 0.25/yaw_goal_tolerance: 0.02/g' /home/ros/colcon_ws/src/icclab_summit_xl/icclab_summit_xl/config/nav2_params_sim.yaml
 
 ENV GZ_SIM_RESOURCE_PATH=/home/ros/rap/Gruppe2/world/models
 

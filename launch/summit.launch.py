@@ -18,6 +18,12 @@ def generate_launch_description():
         description="Enable SLAM. If True, SLAM is used. If False, a pre-existing map is used.",
     )
 
+    declare_explore_arg = DeclareLaunchArgument(
+        "explore",
+        default_value="False",  # Default is 'False' (string)
+        description="Enable autonomous exploration with explore_lite. Only works with slam=True.",
+    )
+
     # Path to the world file within the rosa_summit package
     world_file_path = PathJoinSubstitution(
         [FindPackageShare("rosa_summit"), "world", "small_house.world"]
@@ -47,7 +53,18 @@ def generate_launch_description():
         [FindPackageShare("explore_lite"), "launch", "explore.launch.py"]
     )
 
-    actions_if_slam = [
+    actions_if_slam_no_explore = [
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(summit_xl_simulation_launch_file),
+            launch_arguments={"world": world_file_path}.items(),
+        ),
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(summit_xl_nav2_launch_file),
+            launch_arguments={"slam": "True"}.items(),
+        ),
+    ]
+
+    actions_if_slam_with_explore = [
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(summit_xl_simulation_launch_file),
             launch_arguments={"world": world_file_path}.items(),
@@ -89,11 +106,16 @@ def generate_launch_description():
 
     def evaluate_slam_and_select_actions(context, *args, **kwargs):
         slam_value = context.launch_configurations["slam"]
+        explore_value = context.launch_configurations["explore"]
+
         if slam_value.lower() == "true":
-            return actions_if_slam
+            if explore_value.lower() == "true":
+                return actions_if_slam_with_explore
+            else:
+                return actions_if_slam_no_explore
         else:
             return actions_if_no_slam
 
     return LaunchDescription(
-        [declare_slam_arg, OpaqueFunction(function=evaluate_slam_and_select_actions)]
+        [declare_slam_arg, declare_explore_arg, OpaqueFunction(function=evaluate_slam_and_select_actions)]
     )

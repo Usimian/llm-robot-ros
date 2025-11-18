@@ -204,7 +204,29 @@ def navigate_to_pose(
     goal_msg.pose.pose.orientation.z = z_orientation
     goal_msg.pose.pose.orientation.w = w_orientation
 
-    navigate_to_pose_action_client.send_goal_async(goal_msg)
+    # Wait for action server to be available
+    if not navigate_to_pose_action_client.wait_for_server(timeout_sec=5.0):
+        result = "Navigation action server not available!"
+        print(f"[TOOL RESULT] {result}")
+        return result
+
+    # Send goal and wait for acceptance with polling
+    send_goal_future = navigate_to_pose_action_client.send_goal_async(goal_msg)
+
+    start_time = time.time()
+    while not send_goal_future.done():
+        rclpy.spin_once(node, timeout_sec=0.1)
+        if time.time() - start_time > 10.0:
+            result = "Timeout waiting for goal response!"
+            print(f"[TOOL RESULT] {result}")
+            return result
+
+    goal_handle = send_goal_future.result()
+    if not goal_handle or not goal_handle.accepted:
+        result = "Navigation goal was rejected!"
+        print(f"[TOOL RESULT] {result}")
+        return result
+
     roll, pitch, yaw = quaternion_to_euler(0, 0, z_orientation, w_orientation)
     result = f"Navigation goal sent to (x={x:.2f}, y={y:.2f}, yaw={yaw:.1f}°)."
     print(f"[TOOL RESULT] {result}")
@@ -224,6 +246,17 @@ def navigate_relative(
     - Positive Y: Move to the left
     - Negative Y: Move to the right
 
+    For rotation (quaternion z,w values for common angles):
+    - No turn (0°): z=0.0, w=1.0
+    - Turn right 90° (-90°): z=-0.7071, w=0.7071
+    - Turn left 90° (90°): z=0.7071, w=0.7071
+    - Turn around 180°: z=1.0, w=0.0
+
+    Examples:
+    - Move forward 1m with no turn: x=1.0, y=0.0, z=0.0, w=1.0
+    - Turn 180° in place: x=0.0, y=0.0, z=1.0, w=0.0
+    - Move forward 2m and turn left 90°: x=2.0, y=0.0, z=0.7071, w=0.7071
+
     :param x: The x coordinate of the target position relative to the robot (forward/backward).
     :param y: The y coordinate of the target position relative to the robot (left/right).
     :param z_orientation: The z component of the target orientation (quaternion) relative to the robot.
@@ -234,13 +267,39 @@ def navigate_relative(
 
     goal_msg = NavigateToPose.Goal()
     goal_msg.pose.header.frame_id = "base_link"
-    goal_msg.pose.header.stamp = node.get_clock().now().to_msg()
+    goal_msg.pose.header.stamp.sec = 0  # Use latest available transform
+    goal_msg.pose.header.stamp.nanosec = 0
     goal_msg.pose.pose.position.x = x
     goal_msg.pose.pose.position.y = y
+    goal_msg.pose.pose.position.z = 0.0
+    goal_msg.pose.pose.orientation.x = 0.0
+    goal_msg.pose.pose.orientation.y = 0.0
     goal_msg.pose.pose.orientation.z = z_orientation
     goal_msg.pose.pose.orientation.w = w_orientation
 
-    navigate_to_pose_action_client.send_goal_async(goal_msg)
+    # Wait for action server to be available
+    if not navigate_to_pose_action_client.wait_for_server(timeout_sec=5.0):
+        result = "Navigation action server not available!"
+        print(f"[TOOL RESULT] {result}")
+        return result
+
+    # Send goal and wait for acceptance with polling
+    send_goal_future = navigate_to_pose_action_client.send_goal_async(goal_msg)
+
+    start_time = time.time()
+    while not send_goal_future.done():
+        rclpy.spin_once(node, timeout_sec=0.1)
+        if time.time() - start_time > 10.0:
+            result = "Timeout waiting for goal response!"
+            print(f"[TOOL RESULT] {result}")
+            return result
+
+    goal_handle = send_goal_future.result()
+    if not goal_handle or not goal_handle.accepted:
+        result = "Navigation goal was rejected!"
+        print(f"[TOOL RESULT] {result}")
+        return result
+
     roll, pitch, yaw = quaternion_to_euler(0, 0, z_orientation, w_orientation)
     result = f"Relative navigation goal sent to (x={x:.2f}, y={y:.2f}, yaw={yaw:.1f}°)."
     print(f"[TOOL RESULT] {result}")
@@ -334,7 +393,28 @@ def navigate_to_location_by_name(location_name: str) -> str:
     goal_msg.pose.pose.orientation.z = orient["z"]
     goal_msg.pose.pose.orientation.w = orient["w"]
 
-    navigate_to_pose_action_client.send_goal_async(goal_msg)
+    # Wait for action server to be available
+    if not navigate_to_pose_action_client.wait_for_server(timeout_sec=5.0):
+        result = "Navigation action server not available!"
+        print(f"[TOOL RESULT] {result}")
+        return result
+
+    # Send goal and wait for acceptance with polling
+    send_goal_future = navigate_to_pose_action_client.send_goal_async(goal_msg)
+
+    start_time = time.time()
+    while not send_goal_future.done():
+        rclpy.spin_once(node, timeout_sec=0.1)
+        if time.time() - start_time > 10.0:
+            result = "Timeout waiting for goal response!"
+            print(f"[TOOL RESULT] {result}")
+            return result
+
+    goal_handle = send_goal_future.result()
+    if not goal_handle or not goal_handle.accepted:
+        result = "Navigation goal was rejected!"
+        print(f"[TOOL RESULT] {result}")
+        return result
 
     # Convert orientation to yaw for display
     roll, pitch, yaw = quaternion_to_euler(0, 0, orient["z"], orient["w"])
@@ -363,17 +443,19 @@ def main():
 
     try:
         if user_name == "ros":
-            print("Using remote Ollama instance")
+            model_name = "qwen3-vl:30b"
+            print(f"Using remote Ollama instance with model: {model_name}")
             llm = ChatOllama(
-                model="qwen2.5:7b",  # Fast text-only model with good tool support
+                model=model_name,  # Larger Qwen model for better reasoning
                 temperature=0,
                 num_ctx=2048,  # Reduced context for faster inference
                 num_gpu=99,  # Use all available GPU layers
                 num_thread=4,  # Limit CPU threads to reduce CPU load
-                base_url="http://host.docker.internal:11434",
+                base_url="http://localhost:11434",
             )
         else:
-            print("Using Anthropic API with Claude Sonnet 3.5")
+            model_name = "claude-3-5-sonnet-20240620"
+            print(f"Using Anthropic API with model: {model_name}")
             # Read API key from file
             try:
                 with open("/home/ros/rap/Gruppe2/api-key.txt", "r") as f:
@@ -397,11 +479,29 @@ def main():
     prompt.embodiment = """You are a helpful robot named Summit, designed to assist users in a simulated environment.
 You can navigate, explore, and interact with the environment using various tools.
 
+CRITICAL MOVEMENT INSTRUCTIONS:
+1. For "move forward/backward X meters" commands:
+   - Use navigate_relative with x=distance (forward is positive, backward is negative)
+   - Set y=0.0, z_orientation=0.0, w_orientation=1.0 (no rotation)
+   - Example: "move forward 1m" → navigate_relative(x=1.0, y=0.0, z_orientation=0.0, w_orientation=1.0)
+
+2. For "turn left/right X degrees" commands:
+   - Convert angle to radians: angle_rad = angle_degrees * π / 180
+   - For LEFT turn: z = sin(angle_rad/2), w = cos(angle_rad/2)
+   - For RIGHT turn: z = sin(-angle_rad/2), w = cos(-angle_rad/2)
+   - Set x=0.0, y=0.0 (turn in place)
+   - Example: "turn left 90 degrees" → navigate_relative(x=0.0, y=0.0, z_orientation=0.7071, w_orientation=0.7071)
+   - Example: "turn right 90 degrees" → navigate_relative(x=0.0, y=0.0, z_orientation=-0.7071, w_orientation=0.7071)
+   - Example: "turn 180 degrees" → navigate_relative(x=0.0, y=0.0, z_orientation=1.0, w_orientation=0.0)
+
+3. For named locations like "kitchen", "gym", "living room":
+   - Use navigate_to_location_by_name(location_name)
+
 IMPORTANT: When a tool returns a success message (e.g., "goal sent", "velocity set", "map saved"),
 the task is COMPLETE. Do NOT call the same tool again. Simply acknowledge the completion to the user."""
 
     # Pass the LLM to ROSA with both tools available
-    rosa_agent = ROSA(
+    agent = ROSA(
         ros_version=2,
         llm=llm,
         tools=[
@@ -419,11 +519,12 @@ the task is COMPLETE. Do NOT call the same tool again. Simply acknowledge the co
         verbose=True,
     )
 
-    # Configure the underlying LangChain agent with max_iterations
-    agent = rosa_agent
-    if hasattr(agent, 'agent_executor'):
-        agent.agent_executor.max_iterations = 3
-        agent.agent_executor.early_stopping_method = "generate"
+    # Configure the underlying LangChain agent executor with max_iterations
+    # Access the private __executor attribute using Python name mangling
+    executor = agent._ROSA__executor
+    executor.max_iterations = 3
+    executor.early_stopping_method = "force"  # Valid options: "force" or None
+    print(f"[CONFIG] Agent executor configured with max_iterations={executor.max_iterations}, early_stopping={executor.early_stopping_method}")
 
     print("Type 'exit' or 'quit' to end the program")
 
