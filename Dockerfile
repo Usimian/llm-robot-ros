@@ -4,6 +4,9 @@ FROM robopaas/rap-jazzy:cuda12.5.0
 COPY --chown=ros:ros . /home/ros/rap/Gruppe2
 RUN bash -c "source ~/rap/Gruppe2/init.sh"
 
+# Copy modified bridge config without arm_camera topics
+COPY --chown=ros:ros config/ign_gazebo_bridge.yaml /home/ros/colcon_ws/src/icclab_summit_xl/icclab_summit_xl/config/ign_gazebo_bridge.yaml
+
 # Fix LangChain dependencies - install versions compatible with jpl-rosa 1.0.8
 RUN pip3 install 'langchain~=0.3.23' 'langchain-community~=0.3.21' 'langchain-core~=0.3.52' \
     'langchain-ollama~=0.3.2' 'langchain-openai~=0.3.14' langchain-anthropic --upgrade --break-system-packages

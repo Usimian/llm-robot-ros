@@ -27,6 +27,10 @@ setup(
             os.path.join("share", package_name, "robots"),
             glob(os.path.join("robots", "*.xacro"), recursive=True),
         ),
+        (
+            os.path.join("share", package_name, "config"),
+            glob(os.path.join("config", "*.yaml"), recursive=True),
+        ),
     ],
     install_requires=["setuptools"],
     zip_safe=True,
