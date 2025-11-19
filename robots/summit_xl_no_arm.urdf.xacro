@@ -19,11 +19,8 @@
 
 	<!-- Import our modified sensor -->
 	<xacro:include filename="$(find icclab_summit_xl)/urdf/sensors/hokuyo_utm30lx_no_frame_prefix.urdf.xacro" />
-	<xacro:include filename="$(find icclab_summit_xl)/urdf/sensors/orbbec_astra.urdf.xacro" />
 	<xacro:include filename="$(find icclab_summit_xl)/urdf/sensors/intel_d435.urdf.xacro" />
 	<xacro:include filename="$(find icclab_summit_xl)/urdf/sensors/intel_camera_mount.urdf.xacro" />
-	<xacro:include filename="$(find icclab_summit_xl)/urdf/sensors/luxonis_oak_d_pro.urdf.xacro" />
-	<xacro:include filename="$(find icclab_summit_xl)/urdf/sensors/luxonis_camera_mount.urdf.xacro" />
 	<xacro:include filename="$(find icclab_summit_xl)/urdf/sensors/imu_hector_plugin.urdf.xacro"/>
 
 	<!-- Arm and gripper removed for no-arm configuration -->
@@ -124,20 +121,15 @@
 		</xacro:sensor_axis_m5013-->
 
 
-		<xacro:sensor_orbbec_astra_icclab prefix="$(arg prefix)front_rgbd_camera" parent="$(arg prefix)base_link" ns="$(arg robot_ns)">
+		<xacro:sensor_d435_icclab prefix="$(arg prefix)front_rgbd_camera" parent="$(arg prefix)base_link" ns="$(arg robot_ns)">
 			<origin xyz="${front_rgbd_camera_offset_x} ${front_rgbd_camera_offset_y} ${front_rgbd_camera_offset_z}" rpy="0 0 0"/>
-		</xacro:sensor_orbbec_astra_icclab>
+		</xacro:sensor_d435_icclab>
 
 		<!--xacro:sensor_gps prefix="$(arg prefix)gps" parent="$(arg prefix)base_link">
 			<origin xyz="${gps_offset_x} ${gps_offset_y} ${gps_offset_z}" rpy="0 0 0"/>
 		</xacro:sensor_gps-->
 
-		<!-- Arm, gripper, and arm camera mount removed -->
-
-		<!-- Luxonis OAK_D_PRO - repositioned to front chassis from arm -->
-		<xacro:luxonis_oak_icclab prefix="arm_camera" ns="$(arg robot_ns)" parent="$(arg prefix)base_link">
-			   <origin xyz="0.40 0.0 0.25" rpy="0 0 0"/>
-		</xacro:luxonis_oak_icclab> 
+		<!-- Arm, gripper, and Luxonis camera removed -->
 
    </xacro:macro>
 
