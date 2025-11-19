@@ -34,6 +34,11 @@ def generate_launch_description():
         [FindPackageShare("rosa_summit"), "maps", "default.yaml"]
     )
 
+    # Path to the modified Summit URDF without arm (in rosa_summit package)
+    robot_urdf_path = PathJoinSubstitution(
+        [FindPackageShare("rosa_summit"), "robots", "summit_xl_no_arm.urdf.xacro"]
+    )
+
     # Path to the launch file from icclab_summit_xl package
     summit_xl_simulation_launch_file = PathJoinSubstitution(
         [
@@ -56,7 +61,7 @@ def generate_launch_description():
     actions_if_slam_no_explore = [
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(summit_xl_simulation_launch_file),
-            launch_arguments={"world": world_file_path}.items(),
+            launch_arguments={"world": world_file_path, "robot_xacro": robot_urdf_path}.items(),
         ),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(summit_xl_nav2_launch_file),
@@ -67,7 +72,7 @@ def generate_launch_description():
     actions_if_slam_with_explore = [
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(summit_xl_simulation_launch_file),
-            launch_arguments={"world": world_file_path}.items(),
+            launch_arguments={"world": world_file_path, "robot_xacro": robot_urdf_path}.items(),
         ),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(summit_xl_nav2_launch_file),
@@ -96,7 +101,7 @@ def generate_launch_description():
     actions_if_no_slam = [
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(summit_xl_simulation_launch_file),
-            launch_arguments={"world": world_file_path}.items(),
+            launch_arguments={"world": world_file_path, "robot_xacro": robot_urdf_path}.items(),
         ),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(summit_xl_nav2_launch_file),

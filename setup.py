@@ -23,6 +23,10 @@ setup(
             os.path.join("share", package_name, "maps"),
             glob(os.path.join("maps", "*.*"), recursive=True),
         ),
+        (
+            os.path.join("share", package_name, "robots"),
+            glob(os.path.join("robots", "*.xacro"), recursive=True),
+        ),
     ],
     install_requires=["setuptools"],
     zip_safe=True,
