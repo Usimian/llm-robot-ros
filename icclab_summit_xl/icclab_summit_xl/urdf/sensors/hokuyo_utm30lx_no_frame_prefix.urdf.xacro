@@ -16,11 +16,15 @@
 
 
     <link name="${prefix}_base_link">
+      <!-- Laser mount with sensor -->
       <visual>
-        <origin xyz="0 0 0.055" rpy="0 0 0"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
-            <mesh filename="package://icclab_summit_xl/meshes/hokuyo_utm_30lx.dae"/>
+            <mesh filename="file://$(find icclab_summit_xl)/meshes/sensor/laser_link.STL"/>
         </geometry>
+        <material name="white">
+           <color rgba="1.0 1.0 1.0 1"/>
+        </material>
       </visual>
 
       <inertial>

@@ -13,7 +13,7 @@
 	<xacro:include filename="$(find icclab_summit_xl)/urdf/bases/summit_xl_hls_base.urdf.xacro" />
 
 	<!-- Import summit XL wheels -->
-	<xacro:include filename="$(find summit_xl_description)/urdf/wheels/omni_wheel.urdf.xacro" />
+	<xacro:include filename="$(find icclab_summit_xl)/urdf/wheels/omni_wheel.urdf.xacro" />
 	<xacro:include filename="$(find summit_xl_description)/urdf/wheels/rubber_wheel.urdf.xacro" />
 	<xacro:include filename="$(find summit_xl_description)/urdf/structures/structure_hokuyo.urdf.xacro" />
 
@@ -23,35 +23,24 @@
 	<xacro:include filename="$(find icclab_summit_xl)/urdf/sensors/intel_camera_mount.urdf.xacro" />
 	<xacro:include filename="$(find icclab_summit_xl)/urdf/sensors/imu_hector_plugin.urdf.xacro"/>
 
-	<!-- Arm and gripper removed for no-arm configuration -->
-
 	<xacro:property name="PI" value="3.1415926535897931"/>
 
 	<!-- Wheel parameters -->
-	<!-- Wheel parameters -->
-	<xacro:property name="wheel_offset_x" value="0.2225" />    <!-- x,y,z in translation from base_link to the center of the wheel -->
-	<xacro:property name="wheel_offset_y" value="0.2045" />
-	<xacro:property name="wheel_offset_z" value="0.0" />
+	<xacro:property name="wheel_offset_x" value="0.08" />    <!-- x,y,z in translation from base_link to the center of the wheel -->
+	<xacro:property name="wheel_offset_y" value="0.085" />
+	<xacro:property name="wheel_offset_z" value="-0.039" /> <!-- Yahboom wheel height -->
 
-	<xacro:property name="front_laser_offset_x" value="0.356"/>
+	<xacro:property name="front_laser_offset_x" value="0.0435"/>
 	<xacro:property name="front_laser_offset_y" value="0.0"/>
-	<xacro:property name="front_laser_offset_z" value="0.25"/>
+	<xacro:property name="front_laser_offset_z" value="0.11"/>
 
-	<xacro:property name="front_ptz_camera_offset_x" value="0.308"/>
-	<xacro:property name="front_ptz_camera_offset_y" value="0.141"/>
-	<xacro:property name="front_ptz_camera_offset_z" value="0.195"/>
+	<xacro:property name="imu_offset_x" value="-0.06"/>
+	<xacro:property name="imu_offset_y" value="0.025"/>
+	<xacro:property name="imu_offset_z" value="0.095"/>
 
-	<xacro:property name="rear_ptz_camera_offset_x" value="-0.308"/>
-	<xacro:property name="rear_ptz_camera_offset_y" value="-0.141"/>
-	<xacro:property name="rear_ptz_camera_offset_z" value="0.195"/>
-
-	<xacro:property name="imu_offset_x" value="0.127"/>
-	<xacro:property name="imu_offset_y" value="-0.129"/>
-	<xacro:property name="imu_offset_z" value="0.212"/>
-
-	<xacro:property name="front_rgbd_camera_offset_x" value="0.35850"/>
+	<xacro:property name="front_rgbd_camera_offset_x" value="0.087"/>
 	<xacro:property name="front_rgbd_camera_offset_y" value="0.0"/>
-	<xacro:property name="front_rgbd_camera_offset_z" value="0.22062"/>
+	<xacro:property name="front_rgbd_camera_offset_z" value="0.037"/>
 
 	<xacro:property name="gps_offset_x" value="-0.365"/>
 	<xacro:property name="gps_offset_y" value="-0.167"/>
@@ -95,25 +84,14 @@
 		</xacro:omni_wheel>
         <!-- IMU -->
 		<xacro:sensor_imu_hector prefix="$(arg prefix)imu" ns="$(arg robot_ns)" parent="$(arg prefix)base_link">
-			<origin xyz="${imu_offset_x} ${imu_offset_y} ${imu_offset_z}" rpy="0 0 0"/>
+			<origin xyz="${imu_offset_x} ${imu_offset_y} ${imu_offset_z}" rpy="0 ${PI} ${PI/2}"/>
 		</xacro:sensor_imu_hector>
 
 
 		<!-- SENSORS -->
-		<xacro:sensor_hokuyo_utm30lx_no_frame_prefix ns="$(arg robot_ns)" prefix="front_laser" parent="base_link" min_angle="${-3/4*PI}" max_angle="${3/4*PI}" gpu="false">
+		<xacro:sensor_hokuyo_utm30lx_no_frame_prefix ns="$(arg robot_ns)" prefix="front_laser" parent="base_link" min_angle="${-12*PI/18}" max_angle="${12*PI/18}" gpu="false">
 			<origin xyz="${front_laser_offset_x} ${front_laser_offset_y} ${front_laser_offset_z}" rpy="0 0 0" />
   		</xacro:sensor_hokuyo_utm30lx_no_frame_prefix>
-
-		<!-- Rear laser removed - using only front laser -->
-
-		<!--xacro:sensor_axis_m5013 prefix="$(arg prefix)front_ptz_camera" parent="$(arg prefix)base_link">
-			<origin xyz="${front_ptz_camera_offset_x} ${front_ptz_camera_offset_y} ${front_ptz_camera_offset_z}" rpy="${-PI/2} 0 0"/>
-		</xacro:sensor_axis_m5013-->
-
-		<!--xacro:sensor_axis_m5013 prefix="$(arg prefix)rear_ptz_camera" parent="$(arg prefix)base_link">
-			<origin xyz="${rear_ptz_camera_offset_x} ${rear_ptz_camera_offset_y} ${rear_ptz_camera_offset_z}" rpy="${-PI/2} 0 ${PI}"/>
-		</xacro:sensor_axis_m5013-->
-
 
 		<xacro:sensor_d435_icclab prefix="$(arg prefix)front_rgbd_camera" parent="$(arg prefix)base_link" ns="$(arg robot_ns)">
 			<origin xyz="${front_rgbd_camera_offset_x} ${front_rgbd_camera_offset_y} ${front_rgbd_camera_offset_z}" rpy="0 0 0"/>
@@ -122,8 +100,6 @@
 		<!--xacro:sensor_gps prefix="$(arg prefix)gps" parent="$(arg prefix)base_link">
 			<origin xyz="${gps_offset_x} ${gps_offset_y} ${gps_offset_z}" rpy="0 0 0"/>
 		</xacro:sensor_gps-->
-
-		<!-- Arm, gripper, and Luxonis camera removed -->
 
    </xacro:macro>
 
