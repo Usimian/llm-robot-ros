@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://wiki.ros.org/xacro" name="arm">
+
+  <xacro:macro name="icclab_summit_arm" params="*origin
+    tf_prefix:=arm_ 
+    parent:=base_link
+    simulation:=true
+    sim_ignition:=false"
+    >
+
+    <!-- arm name  -->
+    <xacro:property name="name" default="icclab_ur5" />
+    <xacro:property name="ur_type" default="ur5" />
+    <xacro:property name="headless_mode" default="true" />
+
+    <!-- parameters -->
+    <xacro:property name="joint_limit_params"
+      default="$(find ur_description)/config/${ur_type}/joint_limits.yaml" />
+    <xacro:property name="kinematics_params"
+      default="$(find icclab_summit_xl)/config/ur5_calibrated_kinematics.yaml" />
+    <xacro:property name="physical_params"
+      default="$(find ur_description)/config/${ur_type}/physical_parameters.yaml" />
+    <xacro:property name="visual_params" default="$(find ur_description)/config/${ur_type}/visual_parameters.yaml"/>
+
+    <xacro:if value="${simulation}">
+      <!-- Simulation parameters -->
+      <xacro:property name="fake_sensor_commands" default="false" />
+      <xacro:property name="sim_gazebo" default="${not sim_ignition}" />
+      <xacro:property name="sim_ignition" default="${sim_ignition}" />
+      <xacro:property name="simulation_controllers"
+        default="$(find icclab_summit_xl)/config/ur_controllers.yaml" />
+        <xacro:property name="robot_ip" default="0.0.0.0" />
+    </xacro:if>
+    <xacro:unless value="${simulation}">
+	<xacro:property name="robot_ip" default="192.168.0.210" />
+        <xacro:property name="sim_gazebo" default="false" />
+	<xacro:property name="sim_ignition" default="false" />
+    </xacro:unless>
+
+    <!-- import ur macros -->
+    <xacro:include filename="$(find ur_description)/urdf/ur_macro.xacro" />
+    <xacro:include filename="$(find ur_simulation_gz)/urdf/ur_gz.ros2_control.xacro" />
+    
+    <!-- call the actual ur macro -->
+    <xacro:ur_robot
+     name="${name}"
+     tf_prefix="${tf_prefix}"
+     parent="${parent}"
+     joint_limits_parameters_file="${joint_limit_params}"
+     kinematics_parameters_file="${kinematics_params}"
+     physical_parameters_file="${physical_params}"
+     visual_parameters_file="${visual_params}">
+     <xacro:insert_block name="origin" />          <!-- position robot in the world -->
+   </xacro:ur_robot>
+
+    <!-- ros2 control instance -->
+    <xacro:ur_ros2_control
+      name="${name}"
+      tf_prefix="${tf_prefix}"
+    />
+
+  </xacro:macro>
+
+</robot>

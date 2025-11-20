@@ -4,18 +4,26 @@ This document describes how the icclab_summit_xl package is managed and modified
 
 ## Package Source
 
-The `icclab_summit_xl` package is cloned from GitHub during Docker image build:
-- **Repository**: https://github.com/icclab/icclab_summit_xl
+The `icclab_summit_xl` package is included directly in this repository:
+- **Original source**: https://github.com/icclab/icclab_summit_xl
 - **Branch**: jazzy
-- **Clone location**: `/home/ros/colcon_ws/src/icclab_summit_xl`
+- **Local location**: `icclab_summit_xl/`
+- **Container location**: `/home/ros/colcon_ws/src/icclab_summit_xl` (via symlink)
 
 ## How Modifications Work
 
-The package is cloned and modified automatically in `init.sh`:
+The package is copied from the host into the Docker container:
 
-1. **Clone**: The script clones the icclab_summit_xl repository if not already present
-2. **Apply custom configs**: Copies custom configurations from this repository
-3. **Apply fixes**: Runs sed commands to fix navigation parameters
+1. **Edit locally**: You can edit files in `icclab_summit_xl/` directly on your machine
+2. **Docker build**: The Dockerfile copies the entire directory into the container
+3. **Symlink**: The `init.sh` script creates a symlink in the ROS workspace
+4. **Rebuild**: Changes take effect when you rebuild the Docker image
+
+**Benefits:**
+- Edit with any IDE/editor on your host machine
+- Changes are version controlled in this repository
+- One `git push` commits everything together
+- No need for sed scripts or file overrides
 
 ## Custom Modifications Applied
 
@@ -35,12 +43,17 @@ The package is cloned and modified automatically in `init.sh`:
 
 ## Making Further Modifications
 
-Since the package is now cloned as a proper git repository, you can:
+To modify the Summit XL robot:
 
-1. **Modify directly**: Edit files in `/home/ros/colcon_ws/src/icclab_summit_xl` inside the container
-2. **Persist changes**: Add your modifications to `init.sh` to apply them automatically
-3. **Create a fork**: Fork the upstream repository and update `init.sh` to clone from your fork
-4. **Local development**: Clone the repo locally and mount it as a volume in Docker
+1. **Edit files** in `icclab_summit_xl/` on your host machine using any editor/IDE
+2. **Rebuild Docker** image to apply changes: `docker build -t llm-robot-ros:latest .`
+3. **Restart container**: `bash start_test.sh`
+4. **Commit changes** to git: `git add icclab_summit_xl/ && git commit -m "your changes"`
+
+Common files to modify:
+- `icclab_summit_xl/urdf/` - Robot URDF/xacro descriptions
+- `icclab_summit_xl/config/` - Navigation, localization, and bridge configs
+- `icclab_summit_xl/launch/` - Launch files
 
 ## Files Modified
 

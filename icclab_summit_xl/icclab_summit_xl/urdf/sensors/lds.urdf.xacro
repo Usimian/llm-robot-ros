@@ -1,0 +1,89 @@
+<?xml version=  "1.0"?>
+<robot name="lds"
+  xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+
+  <xacro:macro name="lds" params="prefix parent prefix_topic:='front_laser' *origin min_angle:=1.5708 max_angle:=6.2832">
+
+    <joint name="${prefix}_base_joint" type="fixed">
+      <!-- FRONT MOUNT  -->
+      <!-- origin xyz="0.29 0 0.1" -->
+      <!-- TOP MOUNT -->
+      <!-- origin xyz="0.0 0.0 0.325"-->
+      <xacro:insert_block name="origin" />
+      <parent link="${parent}"/>
+      <child link="${prefix}_base_link"/>
+    </joint>
+
+
+    <link name="${prefix}_base_link">
+      <collision>        <!-- added -->
+        <origin xyz="0.005 0 0.02" rpy="0 0 0"/>
+        <geometry>
+          <cylinder length="0.0315" radius="0.040"/>
+        </geometry>
+      </collision>
+
+      <visual>
+        <origin xyz="0 0 0.02" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://icclab_summit_xl/meshes/sensors/lds.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </visual>
+
+      <inertial>
+        <mass value="0.114" />
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001" />
+      </inertial>
+    </link>
+
+    <link name="${prefix}_link">
+    </link>
+    <joint name="${prefix}_joint" type="fixed">
+      <parent link="${prefix}_base_link"/>
+      <child link="${prefix}_link"/>
+      <origin xyz="0.00 0 0.055" rpy="0 0 0"/>
+    </joint>
+
+    <!-- simulation -->
+    <xacro:sensor_lds_gazebo/>
+
+  </xacro:macro>
+
+<!-- uses ROS Laser Scanner Controller plugin -->
+  <xacro:macro name="sensor_lds_gazebo">
+    <gazebo reference="${prefix}_link">
+      <sensor type="ray" name="${prefix}_sensor">
+        <pose>0 0 0 0 0 0</pose>
+        <visualize>false</visualize>
+        <update_rate>30</update_rate>        <!-- 30 -->
+        <ray>
+          <scan>
+            <horizontal>
+              <samples>360</samples>
+              <resolution>1</resolution>
+              <min_angle>${min_angle}</min_angle>
+              <max_angle>${max_angle}</max_angle>
+            </horizontal>
+          </scan>
+          <range>
+            <min>0.10</min>
+            <max>6.0</max>            <!-- 30.0 -->
+            <resolution>0.01</resolution>
+          </range>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.01</stddev>
+          </noise>
+        </ray>
+        <plugin name="${prefix}_controller" filename="libgazebo_ros_laser.so">
+          <topicName>${prefix_topic}</topicName>
+          <frameName>/${prefix}_link</frameName>
+        </plugin>
+      </sensor>
+    </gazebo>
+  </xacro:macro>
+
+</robot>

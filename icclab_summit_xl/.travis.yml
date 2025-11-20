@@ -1,0 +1,24 @@
+dist: focal
+
+language: generic
+
+services:
+- docker
+
+install:
+- git clone --depth=1 https://github.com/icclab/rosdocked-irlab --branch=noetic ~/rosdocked-irlab
+
+before_script:
+#- docker pull robopaas/rosdocked-kinetic-workspace-included:latest
+
+script:
+- ./.ci/docker_build.sh
+
+deploy:
+  provider: script
+  script: bash ./.ci/docker_push.sh
+  on:
+    branch: noetic
+
+after_deploy:
+- ./.ci/nav_test_bash.sh 

@@ -5,30 +5,39 @@ source /home/ros/.bashrc
 # Linking the ROS2 workspace
 ln -s /home/ros/rap/Gruppe2/ /home/ros/colcon_ws/src/
 
-# Check and clone icclab_summit_xl if not present
+# Link icclab_summit_xl from Gruppe2 to workspace
+# The icclab_summit_xl directory is copied from the host into Gruppe2/ during Docker build
+ICCLAB_SUMMIT_SRC="/home/ros/rap/Gruppe2/icclab_summit_xl"
 ICCLAB_SUMMIT_DIR="/home/ros/colcon_ws/src/icclab_summit_xl"
-if [ ! -d "$ICCLAB_SUMMIT_DIR" ]; then
-  echo "Cloning icclab_summit_xl..."
-  git clone -b jazzy https://github.com/icclab/icclab_summit_xl.git "$ICCLAB_SUMMIT_DIR"
+
+if [ -d "$ICCLAB_SUMMIT_SRC" ]; then
+  echo "Linking icclab_summit_xl from Gruppe2..."
+  ln -s "$ICCLAB_SUMMIT_SRC" "$ICCLAB_SUMMIT_DIR"
 else
-  echo "icclab_summit_xl directory already exists."
-fi
+  # Fallback: clone from GitHub if not copied from host
+  if [ ! -d "$ICCLAB_SUMMIT_DIR" ]; then
+    echo "Cloning icclab_summit_xl from GitHub..."
+    git clone -b jazzy https://github.com/icclab/icclab_summit_xl.git "$ICCLAB_SUMMIT_DIR"
 
-# Apply custom bridge configuration (remove arm_camera topics)
-if [ -f "/home/ros/rap/Gruppe2/config/ign_gazebo_bridge.yaml" ]; then
-  echo "Applying custom bridge configuration..."
-  cp /home/ros/rap/Gruppe2/config/ign_gazebo_bridge.yaml "$ICCLAB_SUMMIT_DIR/icclab_summit_xl/config/ign_gazebo_bridge.yaml"
-fi
+    # Apply custom bridge configuration
+    if [ -f "/home/ros/rap/Gruppe2/config/ign_gazebo_bridge.yaml" ]; then
+      echo "Applying custom bridge configuration..."
+      cp /home/ros/rap/Gruppe2/config/ign_gazebo_bridge.yaml "$ICCLAB_SUMMIT_DIR/icclab_summit_xl/config/ign_gazebo_bridge.yaml"
+    fi
 
-# Apply nav2 configuration fixes
-echo "Applying nav2 configuration fixes..."
-sed -i 's/update_frequency: 5.0/update_frequency: 10.0/g' "$ICCLAB_SUMMIT_DIR/icclab_summit_xl/config/nav2_params_sim.yaml"
-sed -i 's/publish_frequency: 2.0/publish_frequency: 5.0/g' "$ICCLAB_SUMMIT_DIR/icclab_summit_xl/config/nav2_params_sim.yaml"
-sed -i 's/plugins: \["voxel_layer", "inflation_layer"\]/plugins: ["obstacle_layer", "inflation_layer"]/g' "$ICCLAB_SUMMIT_DIR/icclab_summit_xl/config/nav2_params_sim.yaml"
-sed -i '/voxel_layer:/,/raytrace_min_range: 0.0/c\      obstacle_layer:\n        plugin: "nav2_costmap_2d::ObstacleLayer"\n        enabled: True\n        footprint_clearing_enabled: true\n        max_obstacle_height: 2.0\n        observation_sources: scan\n        scan:\n          topic: "<robot_namespace>/scan"\n          max_obstacle_height: 2.0\n          obstacle_max_range: 3.0\n          obstacle_min_range: 0.0\n          raytrace_max_range: 4.0\n          raytrace_min_range: 0.0\n          clearing: True\n          marking: True\n          data_type: "LaserScan"' "$ICCLAB_SUMMIT_DIR/icclab_summit_xl/config/nav2_params_sim.yaml"
-sed -i 's/plugins: \["static_layer", "voxel_layer", "inflation_layer"\]/plugins: ["static_layer", "obstacle_layer", "inflation_layer"]/g' "$ICCLAB_SUMMIT_DIR/icclab_summit_xl/config/nav2_params_sim.yaml"
-sed -i 's/xy_goal_tolerance: 0.25/xy_goal_tolerance: 0.10/g' "$ICCLAB_SUMMIT_DIR/icclab_summit_xl/config/nav2_params_sim.yaml"
-sed -i 's/yaw_goal_tolerance: 0.25/yaw_goal_tolerance: 0.02/g' "$ICCLAB_SUMMIT_DIR/icclab_summit_xl/config/nav2_params_sim.yaml"
+    # Apply nav2 configuration fixes
+    echo "Applying nav2 configuration fixes..."
+    sed -i 's/update_frequency: 5.0/update_frequency: 10.0/g' "$ICCLAB_SUMMIT_DIR/icclab_summit_xl/config/nav2_params_sim.yaml"
+    sed -i 's/publish_frequency: 2.0/publish_frequency: 5.0/g' "$ICCLAB_SUMMIT_DIR/icclab_summit_xl/config/nav2_params_sim.yaml"
+    sed -i 's/plugins: \["voxel_layer", "inflation_layer"\]/plugins: ["obstacle_layer", "inflation_layer"]/g' "$ICCLAB_SUMMIT_DIR/icclab_summit_xl/config/nav2_params_sim.yaml"
+    sed -i '/voxel_layer:/,/raytrace_min_range: 0.0/c\      obstacle_layer:\n        plugin: "nav2_costmap_2d::ObstacleLayer"\n        enabled: True\n        footprint_clearing_enabled: true\n        max_obstacle_height: 2.0\n        observation_sources: scan\n        scan:\n          topic: "<robot_namespace>/scan"\n          max_obstacle_height: 2.0\n          obstacle_max_range: 3.0\n          obstacle_min_range: 0.0\n          raytrace_max_range: 4.0\n          raytrace_min_range: 0.0\n          clearing: True\n          marking: True\n          data_type: "LaserScan"' "$ICCLAB_SUMMIT_DIR/icclab_summit_xl/config/nav2_params_sim.yaml"
+    sed -i 's/plugins: \["static_layer", "voxel_layer", "inflation_layer"\]/plugins: ["static_layer", "obstacle_layer", "inflation_layer"]/g' "$ICCLAB_SUMMIT_DIR/icclab_summit_xl/config/nav2_params_sim.yaml"
+    sed -i 's/xy_goal_tolerance: 0.25/xy_goal_tolerance: 0.10/g' "$ICCLAB_SUMMIT_DIR/icclab_summit_xl/config/nav2_params_sim.yaml"
+    sed -i 's/yaw_goal_tolerance: 0.25/yaw_goal_tolerance: 0.02/g' "$ICCLAB_SUMMIT_DIR/icclab_summit_xl/config/nav2_params_sim.yaml"
+  else
+    echo "icclab_summit_xl directory already exists."
+  fi
+fi
 
 # Check and clone m-explore-ros2 if not present
 EXPLORE_LITE_DIR="/home/ros/colcon_ws/src/m-explore-ros2"
