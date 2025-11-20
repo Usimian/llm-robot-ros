@@ -14,18 +14,17 @@ install(PROGRAMS
   scripts/servo_joint_jog_control.py
   scripts/servo_debug_monitor.py
   scripts/servo_circle_demo.py
-  scripts/move_to_safe_position.py
   scripts/setup_servo.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
-# Install test scripts
-install(PROGRAMS
-  test/test_simulation_readiness.py
-  test/test_navigation.py
-  test/test_moveit_configurations.py
-  DESTINATION lib/${PROJECT_NAME}
-)
+# Install test scripts (commented out - test directory doesn't exist in jazzy branch)
+# install(PROGRAMS
+#   test/test_simulation_readiness.py
+#   test/test_navigation.py
+#   test/test_moveit_configurations.py
+#   DESTINATION lib/${PROJECT_NAME}
+# )
 
 ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
 find_package(rclpy REQUIRED)

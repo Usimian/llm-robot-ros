@@ -12,6 +12,7 @@ ICCLAB_SUMMIT_DIR="/home/ros/colcon_ws/src/icclab_summit_xl"
 
 if [ -d "$ICCLAB_SUMMIT_SRC" ]; then
   echo "Linking icclab_summit_xl from Gruppe2..."
+  rm -rf "$ICCLAB_SUMMIT_DIR"
   ln -s "$ICCLAB_SUMMIT_SRC" "$ICCLAB_SUMMIT_DIR"
 else
   # Fallback: clone from GitHub if not copied from host
