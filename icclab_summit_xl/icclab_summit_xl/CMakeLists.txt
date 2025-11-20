@@ -15,6 +15,7 @@ install(PROGRAMS
   scripts/servo_debug_monitor.py
   scripts/servo_circle_demo.py
   scripts/setup_servo.py
+  scripts/scan_frame_relay.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

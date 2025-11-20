@@ -73,15 +73,15 @@ def generate_launch_description():
       }.items(),
   ))
 
-  # start laserscan merger - removed namespace
-  laser_scan_merger_action = launch.actions.IncludeLaunchDescription(
-    PythonLaunchDescriptionSource(
-      os.path.join(get_package_share_directory('ros2_laser_scan_merger'), 'launch', 'merge_2_scan.launch.py')
-    ),
+  # Scan frame relay - converts Gazebo's scoped frame to TF tree frame
+  scan_frame_relay = launch_ros.actions.Node(
+    package='icclab_summit_xl',
+    executable='scan_frame_relay.py',
+    name='scan_frame_relay',
+    output='screen',
+    parameters=[{'use_sim_time': True}]
   )
-  # Removed namespace push
-  # ga = GroupAction(actions=[PushRosNamespace(namespace), laser_scan_merger_action])
-  ld.add_action(laser_scan_merger_action)
+  ld.add_action(scan_frame_relay)
 
   # log params used
   ld.add_action(LogInfo(msg=["params_file:", params_file]))

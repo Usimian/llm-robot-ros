@@ -1,5 +1,5 @@
-# front_laser
-- ros_topic_name: "/summit/front_laser/scan"
+# front_laser (only laser - rear laser removed, published to /scan_raw then relayed to /scan with correct frame_id)
+- ros_topic_name: "/scan_raw"
   gz_topic_name: "/summit/front_laser/scan"
   ros_type_name: "sensor_msgs/msg/LaserScan"
   gz_type_name: "gz.msgs.LaserScan"
@@ -9,16 +9,6 @@
   direction: GZ_TO_ROS  # Default "BIDIRECTIONAL" - Bridge both directions
                             # "GZ_TO_ROS" - Bridge Ignition topic to ROS
                             # "ROS_TO_GZ" - Bridge ROS topic to Ignition
-
-# rear_laser
-- ros_topic_name: "/summit/rear_laser/scan"
-  gz_topic_name: "/summit/rear_laser/scan"
-  ros_type_name: "sensor_msgs/msg/LaserScan"
-  gz_type_name: "gz.msgs.LaserScan"
-  subscriber_queue: 10       # Default 10
-  publisher_queue: 10        # Default 10
-  lazy: false                # Default "false"
-  direction: GZ_TO_ROS
 
 # front_rgbd_camera/color
 - ros_topic_name: "/summit/front_rgbd_camera/color/image_raw"
@@ -70,9 +60,8 @@
   lazy: true                # Default "false"
   direction: GZ_TO_ROS
 
-# robotnik_base_control/odom
-# - ros_topic_name: "/robotnik_base_control/odom"
-- ros_topic_name: "/summit/odom"
+# robotnik_base_control/odom - published to /odom for Nav2/SLAM
+- ros_topic_name: "/odom"
   gz_topic_name: "/model/summit/odometry_with_covariance"
   ros_type_name: "nav_msgs/msg/Odometry"
   gz_type_name: "gz.msgs.OdometryWithCovariance"
@@ -91,9 +80,8 @@
   lazy: false                # Default "false"
   direction: GZ_TO_ROS
 
-# /summit/robotnik_base_control/cmd_vel_unstamped
-# - ros_topic_name: "/summit/robotnik_base_control/cmd_vel_unstamped"
-- ros_topic_name: "/summit/cmd_vel"
+# cmd_vel - Nav2 publishes to /cmd_vel
+- ros_topic_name: "/cmd_vel"
   gz_topic_name: "/model/summit/cmd_vel"
   ros_type_name: "geometry_msgs/msg/Twist"
   gz_type_name: "gz.msgs.Twist"
@@ -102,8 +90,8 @@
   lazy: false                # Default "false"
   direction: ROS_TO_GZ
 
-# /summit/tf
-- ros_topic_name: "/summit/tf"
+# TF transforms (odom -> base_footprint)
+- ros_topic_name: "/tf"
   gz_topic_name: "/model/summit/pose"
   ros_type_name: "tf2_msgs/msg/TFMessage"
   gz_type_name: "gz.msgs.Pose_V"
