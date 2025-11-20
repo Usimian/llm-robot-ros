@@ -111,53 +111,57 @@ def generate_launch_description():
   ld.add_action(robot_spawner)
 
   ld.add_action(OpaqueFunction(function=launch_setup))
-  
-  joint_broadcaster = launch_ros.actions.Node(
-    package="controller_manager",
-    executable="spawner",
-    # Removed namespace from controller_manager path
-    arguments=["joint_state_broadcaster", "--switch-timeout", "600", "--controller-manager", "/controller_manager"],
-  )
 
-  # Delay joint_broadcaster start after `robot_spawner`
-  delay_joint_broadcaster_after_robot_spawner = RegisterEventHandler(
-      event_handler=OnProcessExit(
-          target_action=robot_spawner,
-          on_exit=[joint_broadcaster],
-      )
-  )
-  ld.add_action(delay_joint_broadcaster_after_robot_spawner)
+  # NOTE: Controller spawners disabled for armless robot configuration
+  # The mecanum drive plugin handles joint states directly
+  # Uncomment these if using a robot with an arm
 
-  arm_controller = launch_ros.actions.Node(
-    package="controller_manager",
-    executable="spawner",
-    # Removed namespace from controller_manager path
-    arguments=["arm_controller", "--switch-timeout",  "600", "--controller-manager", "/controller_manager"],
-  )
+  # joint_broadcaster = launch_ros.actions.Node(
+  #   package="controller_manager",
+  #   executable="spawner",
+  #   # Removed namespace from controller_manager path
+  #   arguments=["joint_state_broadcaster", "--switch-timeout", "600", "--controller-manager", "/controller_manager"],
+  # )
 
-  # Delay arm_controller start after `joint_state_broadcaster`
-  delay_arm_controller_after_joint_state_broadcaster = RegisterEventHandler(
-      event_handler=OnProcessExit(
-          target_action=joint_broadcaster,
-          on_exit=[arm_controller],
-      )
-  )
-  ld.add_action(delay_arm_controller_after_joint_state_broadcaster)
+  # # Delay joint_broadcaster start after `robot_spawner`
+  # delay_joint_broadcaster_after_robot_spawner = RegisterEventHandler(
+  #     event_handler=OnProcessExit(
+  #         target_action=robot_spawner,
+  #         on_exit=[joint_broadcaster],
+  #     )
+  # )
+  # ld.add_action(delay_joint_broadcaster_after_robot_spawner)
 
-  gripper_controller = launch_ros.actions.Node(
-    package="controller_manager",
-    executable="spawner",
-    # Removed namespace from controller_manager path
-    arguments=["robotiq_gripper_controller", "--controller-manager", "/controller_manager"],
-  )
-  # Delay gripper_controller start after `arm_controller`
-  delay_gripper_controller_after_arm_controller = RegisterEventHandler(
-      event_handler=OnProcessExit(
-          target_action=arm_controller,
-          on_exit=[gripper_controller],
-      )
-  )
-  ld.add_action(delay_gripper_controller_after_arm_controller)
+  # arm_controller = launch_ros.actions.Node(
+  #   package="controller_manager",
+  #   executable="spawner",
+  #   # Removed namespace from controller_manager path
+  #   arguments=["arm_controller", "--switch-timeout",  "600", "--controller-manager", "/controller_manager"],
+  # )
+
+  # # Delay arm_controller start after `joint_state_broadcaster`
+  # delay_arm_controller_after_joint_state_broadcaster = RegisterEventHandler(
+  #     event_handler=OnProcessExit(
+  #         target_action=joint_broadcaster,
+  #         on_exit=[arm_controller],
+  #     )
+  # )
+  # ld.add_action(delay_arm_controller_after_joint_state_broadcaster)
+
+  # gripper_controller = launch_ros.actions.Node(
+  #   package="controller_manager",
+  #   executable="spawner",
+  #   # Removed namespace from controller_manager path
+  #   arguments=["robotiq_gripper_controller", "--controller-manager", "/controller_manager"],
+  # )
+  # # Delay gripper_controller start after `arm_controller`
+  # delay_gripper_controller_after_arm_controller = RegisterEventHandler(
+  #     event_handler=OnProcessExit(
+  #         target_action=arm_controller,
+  #         on_exit=[gripper_controller],
+  #     )
+  # )
+  # ld.add_action(delay_gripper_controller_after_arm_controller)
 
   # robotnik_base_control = launch_ros.actions.Node(
   #   package="controller_manager",
