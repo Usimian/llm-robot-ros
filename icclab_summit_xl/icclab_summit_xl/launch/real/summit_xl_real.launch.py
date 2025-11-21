@@ -54,13 +54,6 @@ def generate_launch_description():
       }.items(),
   ))
 
-  ld.add_action(launch.actions.IncludeLaunchDescription(
-    PythonLaunchDescriptionSource(
-      os.path.join(get_package_share_directory('icclab_summit_xl'), 'launch/real', 'urg_node_launch.py')
-    ),
-    launch_arguments={
-      'lidar_position': 'rear',
-      }.items(),
-  ))
+  # Rear lidar removed - using only front lidar
 
   return ld

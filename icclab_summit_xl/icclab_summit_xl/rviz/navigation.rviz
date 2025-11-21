@@ -149,15 +149,6 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        rear_laser_base_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        rear_laser_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
         rear_left_wheel_link:
           Alpha: 1
           Show Axes: false

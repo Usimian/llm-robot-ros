@@ -14,13 +14,10 @@
 
 	<!-- Import summit XL wheels -->
 	<xacro:include filename="$(find icclab_summit_xl)/urdf/wheels/omni_wheel.urdf.xacro" />
-	<xacro:include filename="$(find summit_xl_description)/urdf/wheels/rubber_wheel.urdf.xacro" />
-	<xacro:include filename="$(find summit_xl_description)/urdf/structures/structure_hokuyo.urdf.xacro" />
 
-	<!-- Import our modified sensor -->
+	<!-- Import sensors -->
 	<xacro:include filename="$(find icclab_summit_xl)/urdf/sensors/hokuyo_utm30lx_no_frame_prefix.urdf.xacro" />
 	<xacro:include filename="$(find icclab_summit_xl)/urdf/sensors/intel_d435.urdf.xacro" />
-	<xacro:include filename="$(find icclab_summit_xl)/urdf/sensors/intel_camera_mount.urdf.xacro" />
 	<xacro:include filename="$(find icclab_summit_xl)/urdf/sensors/imu_hector_plugin.urdf.xacro"/>
 
 	<xacro:property name="PI" value="3.1415926535897931"/>

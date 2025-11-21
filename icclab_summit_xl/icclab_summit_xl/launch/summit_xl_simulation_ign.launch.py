@@ -2,7 +2,7 @@ import launch
 import launch_ros
 import os
 import re
-from launch.actions import LogInfo, OpaqueFunction, AppendEnvironmentVariable, RegisterEventHandler
+from launch.actions import LogInfo, OpaqueFunction, AppendEnvironmentVariable, RegisterEventHandler, SetEnvironmentVariable
 from ament_index_python.packages import get_package_share_directory
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from nav2_common.launch import RewrittenYaml
@@ -70,7 +70,7 @@ def generate_launch_description():
   robot_xacro = launch.substitutions.LaunchConfiguration('robot_xacro')
   world = launch.substitutions.LaunchConfiguration('world')
 
-  ld.add_action(launch.actions.AppendEnvironmentVariable(name="GZ_SIM_RESOURCE_PATH", value=("/opt/ros/jazzy/share" + ":" 
+  ld.add_action(launch.actions.AppendEnvironmentVariable(name="GZ_SIM_RESOURCE_PATH", value=("/opt/ros/jazzy/share" + ":"
     + os.environ['COLCON_PREFIX_PATH'] + "/icclab_summit_xl/share" + ":"
     + os.environ['COLCON_PREFIX_PATH'] + "/robotiq_description/share")))
 
@@ -94,12 +94,11 @@ def generate_launch_description():
 
   ros_gz_sim = get_package_share_directory('ros_gz_sim')
 
-
   ld.add_action(launch.actions.IncludeLaunchDescription(
     PythonLaunchDescriptionSource(
       os.path.join(ros_gz_sim, 'launch', 'gz_sim.launch.py')
     ),
-    launch_arguments={'gz_args': ['-v 1 ', world]}.items()
+    launch_arguments={'gz_args': ['-v 1 --gui-config /tmp/.X11-unix/gazebo.config ', world]}.items()
   ))
 
   robot_spawner = launch_ros.actions.Node(
@@ -111,57 +110,6 @@ def generate_launch_description():
   ld.add_action(robot_spawner)
 
   ld.add_action(OpaqueFunction(function=launch_setup))
-
-  # NOTE: Controller spawners disabled for armless robot configuration
-  # The mecanum drive plugin handles joint states directly
-  # Uncomment these if using a robot with an arm
-
-  # joint_broadcaster = launch_ros.actions.Node(
-  #   package="controller_manager",
-  #   executable="spawner",
-  #   # Removed namespace from controller_manager path
-  #   arguments=["joint_state_broadcaster", "--switch-timeout", "600", "--controller-manager", "/controller_manager"],
-  # )
-
-  # # Delay joint_broadcaster start after `robot_spawner`
-  # delay_joint_broadcaster_after_robot_spawner = RegisterEventHandler(
-  #     event_handler=OnProcessExit(
-  #         target_action=robot_spawner,
-  #         on_exit=[joint_broadcaster],
-  #     )
-  # )
-  # ld.add_action(delay_joint_broadcaster_after_robot_spawner)
-
-  # arm_controller = launch_ros.actions.Node(
-  #   package="controller_manager",
-  #   executable="spawner",
-  #   # Removed namespace from controller_manager path
-  #   arguments=["arm_controller", "--switch-timeout",  "600", "--controller-manager", "/controller_manager"],
-  # )
-
-  # # Delay arm_controller start after `joint_state_broadcaster`
-  # delay_arm_controller_after_joint_state_broadcaster = RegisterEventHandler(
-  #     event_handler=OnProcessExit(
-  #         target_action=joint_broadcaster,
-  #         on_exit=[arm_controller],
-  #     )
-  # )
-  # ld.add_action(delay_arm_controller_after_joint_state_broadcaster)
-
-  # gripper_controller = launch_ros.actions.Node(
-  #   package="controller_manager",
-  #   executable="spawner",
-  #   # Removed namespace from controller_manager path
-  #   arguments=["robotiq_gripper_controller", "--controller-manager", "/controller_manager"],
-  # )
-  # # Delay gripper_controller start after `arm_controller`
-  # delay_gripper_controller_after_arm_controller = RegisterEventHandler(
-  #     event_handler=OnProcessExit(
-  #         target_action=arm_controller,
-  #         on_exit=[gripper_controller],
-  #     )
-  # )
-  # ld.add_action(delay_gripper_controller_after_arm_controller)
 
   # robotnik_base_control = launch_ros.actions.Node(
   #   package="controller_manager",
