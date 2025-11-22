@@ -435,7 +435,7 @@ def main():
     vel_publisher = node.create_publisher(Twist, "/summit/cmd_vel", 10)
     explore_publisher = node.create_publisher(Bool, "/summit/explore/resume", 10)
     navigate_to_pose_action_client = ActionClient(
-        node, NavigateToPose, "/summit/navigate_to_pose"
+        node, NavigateToPose, "/navigate_to_pose"
     )
 
     # Get the current username
@@ -451,7 +451,7 @@ def main():
                 num_ctx=2048,  # Reduced context for faster inference
                 num_gpu=99,  # Use all available GPU layers
                 num_thread=4,  # Limit CPU threads to reduce CPU load
-                base_url="http://localhost:11434",
+                base_url="http://host.docker.internal:11434",
             )
         else:
             model_name = "claude-3-5-sonnet-20240620"
@@ -481,18 +481,20 @@ You can navigate, explore, and interact with the environment using various tools
 
 CRITICAL MOVEMENT INSTRUCTIONS:
 1. For "move forward/backward X meters" commands:
-   - Use navigate_relative with x=distance (forward is positive, backward is negative)
+   - ALWAYS use navigate_relative with x=distance (forward is positive, backward is negative)
    - Set y=0.0, z_orientation=0.0, w_orientation=1.0 (no rotation)
    - Example: "move forward 1m" → navigate_relative(x=1.0, y=0.0, z_orientation=0.0, w_orientation=1.0)
 
-2. For "turn left/right X degrees" commands:
-   - Convert angle to radians: angle_rad = angle_degrees * π / 180
-   - For LEFT turn: z = sin(angle_rad/2), w = cos(angle_rad/2)
-   - For RIGHT turn: z = sin(-angle_rad/2), w = cos(-angle_rad/2)
-   - Set x=0.0, y=0.0 (turn in place)
-   - Example: "turn left 90 degrees" → navigate_relative(x=0.0, y=0.0, z_orientation=0.7071, w_orientation=0.7071)
-   - Example: "turn right 90 degrees" → navigate_relative(x=0.0, y=0.0, z_orientation=-0.7071, w_orientation=0.7071)
-   - Example: "turn 180 degrees" → navigate_relative(x=0.0, y=0.0, z_orientation=1.0, w_orientation=0.0)
+2. For "turn left/right X degrees" commands - USE THESE PRE-CALCULATED VALUES:
+   - Turn left 45°: navigate_relative(x=0.0, y=0.0, z_orientation=0.3827, w_orientation=0.9239)
+   - Turn right 45°: navigate_relative(x=0.0, y=0.0, z_orientation=-0.3827, w_orientation=0.9239)
+   - Turn left 90°: navigate_relative(x=0.0, y=0.0, z_orientation=0.7071, w_orientation=0.7071)
+   - Turn right 90°: navigate_relative(x=0.0, y=0.0, z_orientation=-0.7071, w_orientation=0.7071)
+   - Turn 180°: navigate_relative(x=0.0, y=0.0, z_orientation=1.0, w_orientation=0.0)
+   - For other angles, use: z = sin(angle_degrees × π ÷ 360), w = cos(angle_degrees × π ÷ 360)
+     (For left turns use positive z, for right turns use negative z)
+   - DO NOT use math tools - calculate mentally or use the examples above
+   - ALWAYS call navigate_relative directly with the calculated values
 
 3. For named locations like "kitchen", "gym", "living room":
    - Use navigate_to_location_by_name(location_name)
@@ -581,9 +583,12 @@ the task is COMPLETE. Do NOT call the same tool again. Simply acknowledge the co
         print("\n" + "="*60)
         print("Program terminated by user")
         print("="*60)
-
-    agent.shutdown()
-    print("Bye from rosa_summit.")
+    finally:
+        # Clean up ROS resources
+        if node:
+            node.destroy_node()
+        rclpy.shutdown()
+        print("Bye from rosa_summit.")
 
 
 if __name__ == "__main__":

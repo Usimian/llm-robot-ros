@@ -25,6 +25,8 @@ docker run -d \
     --network host \
     -v $XSOCK:$XSOCK:rw \
     -v $XAUTH:$XAUTH:rw \
+    -v $HOME/.gz:/home/ros/.gz \
+    -v $HOME/.rviz2:/home/ros/.rviz2 \
     -e DISPLAY=$DISPLAY \
     -e XAUTHORITY=$XAUTH \
     -e NVIDIA_DRIVER_CAPABILITIES=all \

@@ -3,6 +3,8 @@ docker run -it --rm \
     --gpus all \
     --device /dev/dri \
     -v /tmp/.X11-unix:/tmp/.X11-unix \
+    -v $HOME/.gz:/home/ros/.gz \
+    -v $HOME/.rviz2:/home/ros/.rviz2 \
     -e NVIDIA_DRIVER_CAPABILITIES=all \
     -e DISPLAY=$DISPLAY \
     -e XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR \
